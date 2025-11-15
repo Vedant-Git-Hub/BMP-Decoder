@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1763197450 source:d:\c code\bmp-decoder\bmpdecoder\main.c
+	<stdio.h>
+	<stdlib.h>
+	<stdint.h>
+	<stdbool.h>
+	<windows.h>
+
