@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1763287775 source:d:\c code\bmp-decoder\bmpdecoder\main.c
+1763289251 source:d:\c code\bmp-decoder\bmpdecoder\main.c
 	<stdio.h>
 	<stdlib.h>
 	<stdint.h>
