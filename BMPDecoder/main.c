@@ -132,13 +132,11 @@ void printImageScrn()
 
     for(int32_t row = ver; row > 0; row--)
     {
-        for(uint32_t col = 0; col < row_bytes; col++)
+        for(uint32_t col = 0; col < hor; col++)
         {
-            uint8_t temp = image->img_array[(row * row_bytes) + col];
+            uint8_t temp = image->img_array[(row * row_bytes) + (col / 8)];
 
-            for(int8_t shift = 7; shift >= 0; shift--)
-            {
-                if(((temp >> (shift)) & 0x01) == 1)
+                if(((temp >> (7 - (col & 0x00000007))) & 0x01) == 1)
                 {
                     printf("█");
                 }
@@ -146,7 +144,7 @@ void printImageScrn()
                 {
                     printf(" ");
                 }
-            }
+
         }
 
         printf("\n");
