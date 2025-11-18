@@ -7,11 +7,13 @@
 
 /*Absolute path to the image*/
 #define IMAGE_PATH            "D:/C code/BMP-Decoder/monochrome.bmp"
+#define DISP_BUFF_SIZE        8192
 
 
 
 /*Enum for color in which the text should be printed*/
-typedef enum{
+typedef enum
+{
     NO_COLOR = 0,
     /*Normal color*/
     BLACK = 30,
@@ -31,7 +33,7 @@ typedef enum{
     B_MAGENTA,
     B_CYIAN,
     B_WHITE,
-}E_COLOR;
+} E_COLOR;
 
 
 /*BMP header structure format*/
@@ -124,7 +126,7 @@ bool getFilePointer(char *bmp_img)
 
     return 1;
 
-/*Lable to handle errors for all ghe above cases*/
+    /*Lable to handle errors for all ghe above cases*/
 Error:
     return 0;
 
@@ -171,10 +173,72 @@ bool validateFile(char *bmp_img)
         return 1;
     }
 
-/*Label to handle errors for above cases*/
+    /*Label to handle errors for above cases*/
 Error:
     return 0;
 
+}
+
+bool printDisplayBuffer(uint8_t color)
+{
+    /*Variable to hold pixels in x direction*/
+    uint32_t hor = image->dib_header.pixel_x;
+    /*Variable to hold pixels in Y direction*/
+    uint32_t ver = image->dib_header.pixel_y;
+    /*Gets the total bytes required to represent pixels in x direction or total bytes in a row*/
+    uint32_t row_bytes = image->dib_header.raw_bitmap_size / image->dib_header.pixel_y;
+    char *display_buffer = NULL;
+
+    display_buffer = (char *)malloc(DISP_BUFF_SIZE);
+    uint32_t disp_idx = 0;
+
+    if(!display_buffer)
+    {
+        printf("\nError: Display buffer null pointer!");
+        return 0;
+    }
+
+    /*Loop to traverse through the array rows, in reserve as the image array in inverted inside a BMP file*/
+    for(int32_t row = ver; row > 0; row--)
+    {
+        /*Loop to traverse through the columns*/
+        for(uint32_t col = 0; col < hor; col++)
+        {
+            /*Gets the byte from the image array which represents group of 8 pixels*/
+            uint8_t temp = image->img_array[((row - 1) * row_bytes) + (col / 8)];
+
+            if(disp_idx >= (DISP_BUFF_SIZE - 2))
+            {
+                display_buffer[disp_idx++] = '\0';
+                printf("\033[%dm%s\033[0m", color, display_buffer);
+                disp_idx = 0;
+                memset(display_buffer, 0, DISP_BUFF_SIZE);
+            }
+
+            /*Checks if the required pixel is ON by locating the bit representing the pixel*/
+            if(((temp >> (7 - (col & 0x00000007))) & 0x01) == 1)
+            {
+                display_buffer[disp_idx++] = '#';
+            }
+            else
+            {
+                display_buffer[disp_idx++] = ' ';
+            }
+
+        }
+
+        display_buffer[disp_idx++] = '\n';
+    }
+
+    if (disp_idx > 0)
+    {
+        display_buffer[disp_idx] = '\0';
+        printf("\033[%dm%s\033[0m", color, display_buffer);
+    }
+
+    free(display_buffer);
+
+    return 1;
 }
 
 /*Function to print the image array on console in user selectable colors*/
@@ -202,40 +266,9 @@ void printImageScrn(char *img_path, uint8_t color)
 //        printf("\n Important colors = %d", image->dib_header.imp_colors);
 //        printf("\n\n");
 
-        /*Variable to hold pixels in x direction*/
-        uint32_t hor = image->dib_header.pixel_x;
-        /*Variable to hold pixels in Y direction*/
-        uint32_t ver = image->dib_header.pixel_y;
-        /*Gets the total bytes required to represent pixels in x direction or total bytes in a row*/
-        uint32_t row_bytes = image->dib_header.raw_bitmap_size / image->dib_header.pixel_y;
+        /*Handles the buffering logic and prints image on screen*/
+        printDisplayBuffer(color);
 
-
-        /*Loop to traverse through the array rows, in reserve as the image array in inverted inside a BMP file*/
-        for(int32_t row = ver; row > 0; row--)
-        {
-            /*Loop to traverse through the columns*/
-            for(uint32_t col = 0; col < hor; col++)
-            {
-                /*Gets the byte from the image array which represents group of 8 pixels*/
-                uint8_t temp = image->img_array[(row * row_bytes) + (col / 8)];
-
-                /*Checks if the required pixel is ON by locating the bit representing the pixel*/
-                if(((temp >> (7 - (col & 0x00000007))) & 0x01) == 1)
-                {
-                    /*Prints the block character in ANSI colors*/
-                    printf("\033[%dm█\033[0m", color);
-                }
-                else
-                {
-                    /*Prints space for OFF pixel*/
-                    printf(" ");
-                }
-
-            }
-
-            /*End of row, move to next line/row*/
-            printf("\n");
-        }
     }
 
     /*Close the opened map and file*/
@@ -252,6 +285,7 @@ int main()
     printImageScrn(IMAGE_PATH, GREEN);
 //    printImageScrn(IMAGE_PATH, GREEN);
 //    printImageScrn(IMAGE_PATH, BLUE);
+
 
     while(1);
 
