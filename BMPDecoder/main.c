@@ -282,7 +282,7 @@ int main()
     /*Imp call to set the encoding to UTF-8 inorder to use block character '█'*/
     SetConsoleOutputCP(CP_UTF8);
     /*Prints the image on screen with desired color, if all the checks are passed*/
-    printImageScrn(IMAGE_PATH, GREEN);
+    printImageScrn(IMAGE_PATH, RED);
 //    printImageScrn(IMAGE_PATH, GREEN);
 //    printImageScrn(IMAGE_PATH, BLUE);
 
