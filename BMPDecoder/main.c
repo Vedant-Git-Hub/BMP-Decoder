@@ -5,8 +5,9 @@
 #include <windows.h>
 #include <io.h>
 
-/*Absolute path to the image*/
+/*Path to the image*/
 #define IMAGE_PATH            "D:/C code/BMP-Decoder/BMPDecoder/Images/monochrome.bmp"
+/*Size of display buffer in bytes*/
 #define DISP_BUFF_SIZE        8192
 
 
@@ -179,7 +180,8 @@ Error:
 
 }
 
-bool printDisplayBuffer(uint8_t color)
+/*Handles the buffering and prints the pixated buffer data to console*/
+void printDisplayBuffer(uint8_t color)
 {
     /*Variable to hold pixels in x direction*/
     uint32_t hor = image->dib_header.pixel_x;
@@ -187,18 +189,25 @@ bool printDisplayBuffer(uint8_t color)
     uint32_t ver = image->dib_header.pixel_y;
     /*Gets the total bytes required to represent pixels in x direction or total bytes in a row*/
     uint32_t row_bytes = image->dib_header.raw_bitmap_size / image->dib_header.pixel_y;
+    /*Pointer variable to hold the address of diplay buffer*/
     char *display_buffer = NULL;
 
+    /*Allocate memory for display buffer in heap of about DISP_BUFF_SIZE size*/
     display_buffer = (char *)malloc(DISP_BUFF_SIZE);
+    /*Variable to hold the current index of display buffer*/
     uint32_t disp_idx = 0;
 
+    /*Check if the display buffer is allocated successfully or not*/
     if(!display_buffer)
     {
         printf("\nError: Display buffer null pointer!");
-        return 0;
+        return;
     }
 
-    /*Loop to traverse through the array rows, in reserve as the image array in inverted inside a BMP file*/
+    /*Clear the buffer*/
+    memset(display_buffer, 0, DISP_BUFF_SIZE);
+
+    /*Loop to traverse through the array rows, in reverse as the image array in inverted inside a BMP file*/
     for(int32_t row = ver; row > 0; row--)
     {
         /*Loop to traverse through the columns*/
@@ -206,39 +215,48 @@ bool printDisplayBuffer(uint8_t color)
         {
             /*Gets the byte from the image array which represents group of 8 pixels*/
             uint8_t temp = image->img_array[((row - 1) * row_bytes) + (col / 8)];
-
+            /*Check if we have filled the buffer fully 1 byte is reserved for the NULL character*/
             if(disp_idx >= (DISP_BUFF_SIZE - 2))
             {
-                display_buffer[disp_idx++] = '\0';
+                /*Last byte in the buffer should be a NULL character*/
+                display_buffer[disp_idx] = '\0';
+                /*Print the buffer as a string*/
                 printf("\033[%dm%s\033[0m", color, display_buffer);
+                /*Reset the buffer index to reuse the buffer for remaining pixels*/
                 disp_idx = 0;
+                /*Clear the buffer*/
                 memset(display_buffer, 0, DISP_BUFF_SIZE);
             }
 
             /*Checks if the required pixel is ON by locating the bit representing the pixel*/
             if(((temp >> (7 - (col & 0x00000007))) & 0x01) == 1)
             {
+                /*If a pixel is set assign # character to the buffer at current index*/
                 display_buffer[disp_idx++] = '#';
             }
             else
             {
+                /*If a pixel is reset assign space character to the buffer at current index*/
                 display_buffer[disp_idx++] = ' ';
             }
 
         }
 
+        /*Add a new line character to the buffer at the end of every row*/
         display_buffer[disp_idx++] = '\n';
     }
 
+    /*Check if the buffer index is non zero which means the buffer has some image data to flush*/
     if (disp_idx > 0)
     {
+        /*Add a null character to current index*/
         display_buffer[disp_idx] = '\0';
+        /*Print the remaining pixels from the buffer*/
         printf("\033[%dm%s\033[0m", color, display_buffer);
     }
 
+    /*Free the buffer*/
     free(display_buffer);
-
-    return 1;
 }
 
 /*Function to print the image array on console in user selectable colors*/
@@ -279,13 +297,12 @@ void printImageScrn(char *img_path, uint8_t color)
 
 int main()
 {
-    /*Imp call to set the encoding to UTF-8 inorder to use block character '█'*/
-    SetConsoleOutputCP(CP_UTF8);
-    /*Prints the image on screen with desired color, if all the checks are passed*/
+    /*Prints the image on screen in RED color*/
     printImageScrn(IMAGE_PATH, RED);
-//    printImageScrn(IMAGE_PATH, GREEN);
-//    printImageScrn(IMAGE_PATH, BLUE);
-
+    /*Prints the image on screen in GREEN color*/
+    printImageScrn(IMAGE_PATH, GREEN);
+    /*Prints the image on screen in BLUE color*/
+    printImageScrn(IMAGE_PATH, BLUE);
 
     while(1);
 
