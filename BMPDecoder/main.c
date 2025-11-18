@@ -6,7 +6,7 @@
 #include <io.h>
 
 /*Absolute path to the image*/
-#define IMAGE_PATH            "D:/C code/BMP-Decoder/monochrome.bmp"
+#define IMAGE_PATH            "D:/C code/BMP-Decoder/BMPDecoder/Images/monochrome.bmp"
 #define DISP_BUFF_SIZE        8192
 
 
